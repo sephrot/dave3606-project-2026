@@ -8,7 +8,6 @@ from time import perf_counter
 from collections import OrderedDict
 
 app = Flask(__name__)
-
 cache = OrderedDict()
 CACHE_MAX_SIZE = 100
 
@@ -33,7 +32,6 @@ class Database:
         self.cursor.close()
         self.conn.close()
 
-        
 @app.route("/")
 def index():
     with open("templates/index.html") as f:
