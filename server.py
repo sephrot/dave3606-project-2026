@@ -8,6 +8,7 @@ from time import perf_counter
 from collections import OrderedDict
 
 app = Flask(__name__)
+
 cache = OrderedDict()
 CACHE_MAX_SIZE = 100
 
@@ -32,6 +33,7 @@ class Database:
         self.cursor.close()
         self.conn.close()
 
+        
 @app.route("/")
 def index():
     with open("templates/index.html") as f:
@@ -79,8 +81,12 @@ def legoSet():
 def get_set_data(db, set_id):
     if set_id in cache:
         cache.move_to_end(set_id)
-        return json.dumps(cache[set_id], indent=4)
+        start = perf_counter()
+        result = json.dumps(cache[set_id], indent=4)
+        print(f"Cache HIT: {perf_counter() - start:.6f}s")
+        return result
     
+    start = perf_counter()
     row = db.execute_and_fetch_all("SELECT id, name, year, category FROM lego_set WHERE id = %s", (set_id,))
     rows = db.execute_and_fetch_all("SELECT brick_type_id, color_id, count FROM lego_inventory WHERE set_id = %s", (set_id,))
     
@@ -99,6 +105,7 @@ def get_set_data(db, set_id):
     if len(cache) > CACHE_MAX_SIZE:
         cache.popitem(last=False)
     
+    print(f"Cache MISS: {perf_counter() - start:.6f}s")
     return json.dumps(result, indent=4)
 
 @app.route("/api/set")
